@@ -1,0 +1,217 @@
+@page "/pipeline"
+@inject ISalesCrmApiClient ApiClient
+
+<PageHeader Title="Pipeline Kanban"
+           Subtitle="Stage-based deal movement and prioritization."
+           Icon="pipeline" />
+
+@if (loading)
+{
+    <LoadingState />
+}
+else if (!string.IsNullOrEmpty(error))
+{
+    <ErrorState Message="@error" />
+}
+else if (cards.Count == 0)
+{
+    <EmptyState Message="No pipeline cards available." />
+}
+else
+{
+    <div class="content-card pipeline-kanban-card">
+        <div class="w-full overflow-x-auto">
+        <SfKanban @ref="kanbanRef"
+                  TValue="PipelineCardDto"
+                  KeyField="Stage"
+                  DataSource="@cards"
+                  AllowDragAndDrop="false" 
+                  Width="100%"
+                  Height="auto">
+            <KanbanColumns>
+                <KanbanColumn HeaderText="Qualification" KeyField="@(new List<string> { "Qualification" })" />
+                <KanbanColumn HeaderText="Discovery" KeyField="@(new List<string> { "Discovery" })" />
+                <KanbanColumn HeaderText="Proposal" KeyField="@(new List<string> { "Proposal" })" />
+                <KanbanColumn HeaderText="Negotiation" KeyField="@(new List<string> { "Negotiation" })" />
+                <KanbanColumn HeaderText="Closed Won" KeyField="@(new List<string> { "ClosedWon" })" />
+                <KanbanColumn HeaderText="Closed Lost" KeyField="@(new List<string> { "ClosedLost" })" />
+            </KanbanColumns>
+            <KanbanCardSettings HeaderField="Title" ContentField="Account">
+                <Template>
+                    @{
+                        var card = (PipelineCardDto)context;
+                        var isActive = ActiveStages.Contains(card.Stage);
+                    }
+                    <div class="pipeline-card-template">
+                        <div class="pipeline-card-topline">
+                            <strong>@card.Title</strong>
+                            @if (isActive && AllowedForecastBadges.Contains(card.ForecastCategory))
+                            {
+                                <span class="forecast-chip">@card.ForecastCategory</span>
+                            }
+                        </div>
+                        <span class="pipeline-card-account">@card.Account</span>
+                        <b>@Formatters.FormatUsd(card.Amount)</b>
+
+                        @if (IsTerminal(card.Stage))
+                        {
+                            <dl class="pipeline-card-meta terminal-meta">
+                                <div>
+                                    <dt>Owner</dt>
+                                    <dd>@card.Owner</dd>
+                                </div>
+                                <div>
+                                    <dt>@(card.Stage == "ClosedWon" ? "Won Date" : "Lost Date")</dt>
+                                    <dd>@Formatters.FormatMonthDayYear(card.Stage == "ClosedWon" ? card.WonDate : card.LostDate)</dd>
+                                </div>
+                                @if (card.Stage == "ClosedWon" && card.SalesCycleDays is int cycle && cycle >= 0)
+                                {
+                                    <div>
+                                        <dt>Cycle</dt>
+                                        <dd>@cycle days</dd>
+                                    </div>
+                                }
+                                @if (card.Stage == "ClosedLost" && !string.IsNullOrWhiteSpace(card.LossReason))
+                                {
+                                    <div class="pipeline-card-meta-wide">
+                                        <dt>Loss Reason</dt>
+                                        <dd>@card.LossReason</dd>
+                                    </div>
+                                }
+                            </dl>
+                        }
+                        else
+                        {
+                            <dl class="pipeline-card-meta">
+                                <div>
+                                    <dt>Owner</dt>
+                                    <dd>@card.Owner</dd>
+                                </div>
+                                <div>
+                                    <dt>Close</dt>
+                                    <dd>@Formatters.FormatMonthDayYear(card.ExpectedCloseDate)</dd>
+                                </div>
+                                <div>
+                                    <dt>Prob.</dt>
+                                    <dd>@Formatters.FormatPercent(card.Probability)</dd>
+                                </div>
+                                <div>
+                                    <dt>Priority</dt>
+                                    <dd><span class="@PriorityClass(card.Priority)">@card.Priority</span></dd>
+                                </div>
+                            </dl>
+                        }
+                    </div>
+                </Template>
+            </KanbanCardSettings>
+            <KanbanEvents TValue="PipelineCardDto" DragStart="OnDragStart" DragStop="OnDragStop" />
+        </SfKanban>
+        </div>
+    </div>
+}
+
+@code {
+    private SfKanban<PipelineCardDto>? kanbanRef;
+    private List<PipelineCardDto> cards = new();
+    private bool loading = true;
+    private string? error;
+
+    // Snapshot of each dragged card's stage taken at DragStart, used by DragStop
+    // to detect a real stage change and roll back on API failure.
+    private readonly Dictionary<string, string> dragStartStages = new();
+
+    private static readonly HashSet<string> ActiveStages = new() { "Qualification", "Discovery", "Proposal", "Negotiation" };
+    private static readonly HashSet<string> AllowedForecastBadges = new() { "Pipeline", "Best Case", "Commit", "Omitted" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var data = await ApiClient.GetPipelineAsync();
+            cards = data.ToList();
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private static bool IsTerminal(string stage) => stage is "ClosedWon" or "ClosedLost";
+
+    private static string PriorityClass(string? priority)
+    {
+        var normalized = (priority ?? "Medium").ToLowerInvariant();
+        return $"priority-chip priority-{normalized}";
+    }
+
+    /// <summary>
+    /// Snapshot each dragged card's stage before the drop so we can detect a real stage
+    /// change and roll back on API failure.
+    /// </summary>
+    private void OnDragStart(Syncfusion.Blazor.Kanban.DragEventArgs<PipelineCardDto> args)
+    {
+        if (args.Data is null) return;
+        dragStartStages.Clear();
+        foreach (var card in args.Data)
+        {
+            if (!string.IsNullOrEmpty(card.Id))
+            {
+                dragStartStages[card.Id] = card.Stage;
+            }
+        }
+    }
+
+    /// <summary>
+    /// After a card is dragged and dropped between Kanban columns, the component updates the
+    /// card's <see cref="PipelineCardDto.Stage"/> in the bound data source. We persist only the
+    /// stage change through the API and then mirror the new stage into the matching entry of the
+    /// bound <see cref="cards"/> list, calling <see cref="SfKanban{TValue}.UpdateCardAsync"/> so
+    /// Syncfusion re-tallies the column header item-count badges (otherwise they stay stale).
+    /// If the API call fails, we roll the card back to its prior stage so the UI and backend
+    /// stay consistent. We deliberately DO NOT use <c>RefreshAsync()</c> here — a full board
+    /// re-render re-layouts every card from <see cref="cards"/>, which collapses the columns
+    /// and produces an incorrect count.
+    /// </summary>
+    private async Task OnDragStop(Syncfusion.Blazor.Kanban.DragEventArgs<PipelineCardDto> args)
+    {
+        if (args.Data is null || args.Data.Count == 0)
+        {
+            dragStartStages.Clear();
+            return;
+        }
+
+        foreach (var dropped in args.Data)
+        {
+            dragStartStages.TryGetValue(dropped.Id, out var previousStage);
+
+            // Skip persistence if the stage didn't actually change (e.g. drop in the same column).
+            if (string.IsNullOrEmpty(previousStage) || previousStage == dropped.Stage)
+            {
+                continue;
+            }
+
+            // Persist the new stage through the API.
+            var persisted = await ApiClient.UpdateOpportunityStageAsync(dropped.Id, dropped.Stage);
+
+            // Mirror the change (or rollback) into the bound cards list and ask Syncfusion to
+            // re-render this single card, which is the documented way to refresh a column's
+            // count badge after a stage change.
+            var index = cards.FindIndex(c => c.Id == dropped.Id);
+            if (index >= 0)
+            {
+                cards[index].Stage = persisted ? dropped.Stage : previousStage;
+                if (kanbanRef is not null)
+                {
+                    await kanbanRef.UpdateCardAsync(cards[index], index);
+                }
+            }
+        }
+
+        dragStartStages.Clear();
+        StateHasChanged();
+    }
+}

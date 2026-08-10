@@ -1,0 +1,59 @@
+@page "/accounts/{AccountId}"
+@inject ISalesCrmApiClient ApiClient
+
+<PageHeader Title="Account Details"
+           Subtitle="Review account health, contacts, and pipeline context."
+           Icon="accounts" />
+
+@if (loading)
+{
+    <LoadingState />
+}
+else if (account is null)
+{
+    <EmptyState Message="Account not found." />
+}
+else
+{
+    <div class="dashboard-grid">
+        <div class="content-card">
+            <h2>@account.Name</h2>
+            <dl class="account-meta">
+                <div><dt>Industry</dt><dd>@account.Industry</dd></div>
+                <div><dt>Region</dt><dd>@account.Region</dd></div>
+                <div><dt>Status</dt><dd><StatusBadge Value="@account.Status" /></dd></div>
+                <div><dt>Owner</dt><dd>@account.Owner</dd></div>
+                <div><dt>Revenue</dt><dd>@Formatters.FormatUsd(account.Revenue)</dd></div>
+                <div><dt>Health Score</dt><dd><ScoreBadge Value="@account.HealthScore" /></dd></div>
+            </dl>
+        </div>
+        <div class="content-card">
+            <h2>Pipeline Context</h2>
+            <p class="text-muted">Related opportunities and recent activities will appear here.</p>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string AccountId { get; set; } = string.Empty;
+
+    private AccountDto? account;
+    private bool loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var all = await ApiClient.GetAccountsAsync();
+            account = all.FirstOrDefault(a => a.Id.Equals(AccountId, StringComparison.OrdinalIgnoreCase));
+        }
+        catch
+        {
+            account = null;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+}

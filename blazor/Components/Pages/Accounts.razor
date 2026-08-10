@@ -1,0 +1,114 @@
+@page "/accounts"
+@inject ISalesCrmApiClient ApiClient
+@inject NavigationManager Navigation
+
+<PageHeader Title="Accounts"
+           Subtitle="Manage account records and territory ownership."
+           Icon="accounts" />
+
+@if (loading)
+{
+    <LoadingState />
+}
+else if (!string.IsNullOrEmpty(error))
+{
+    <ErrorState Message="@error" />
+}
+else if (accounts.Count == 0)
+{
+    <EmptyState Message="No accounts found." />
+}
+else
+{
+    <div class="content-card">
+        <div class="w-full overflow-x-auto">
+        <SfGrid @ref="gridRef"
+                DataSource="@accounts"
+                AllowPaging="true"
+                AllowSorting="true"
+                AllowFiltering="true"
+                AllowGrouping="true"
+                AllowTextWrap="true"
+                AllowResizing="true"
+                AllowExcelExport="true"
+                AllowCsvExport="true"
+                ShowColumnMenu="true"
+                Toolbar="@ToolbarItems"
+                Height="560px">
+            <GridPageSettings PageSize="10" PageCount="5" />
+            <GridFilterSettings Type="Syncfusion.Blazor.Grids.FilterType.Menu" />
+            <GridTextWrapSettings WrapMode="Syncfusion.Blazor.Grids.WrapMode.Both" />
+            <GridGroupSettings ShowDropArea="true" ShowUngroupButton="true" />
+            <GridEvents TValue="AccountDto" OnToolbarClick="OnToolbarClicking" />
+            <GridColumns>
+                <GridColumn Field="Name" HeaderText="Account Name" Width="260" TextAlign="Syncfusion.Blazor.Grids.TextAlign.Left">
+                    <Template>
+                        @if (context is AccountDto account)
+                        {
+                            <a href="@($"accounts/{account.Id}")" class="account-link">@account.Name</a>
+                        }
+                    </Template>
+                </GridColumn>
+                <GridColumn Field="Industry" HeaderText="Industry" Width="180" />
+                <GridColumn Field="Region" HeaderText="Region" Width="150" />
+                <GridColumn Field="Status" HeaderText="Status" Width="140" TextAlign="Syncfusion.Blazor.Grids.TextAlign.Center">
+                    <Template>
+                        <StatusBadge Value="@((context as AccountDto)?.Status)" />
+                    </Template>
+                </GridColumn>
+                <GridColumn Field="Owner" HeaderText="Owner" Width="150" />
+                <GridColumn Field="Revenue" HeaderText="Revenue" Width="140" TextAlign="Syncfusion.Blazor.Grids.TextAlign.Right" Format="C2" />
+                <GridColumn Field="HealthScore" HeaderText="Health Score" Width="150" TextAlign="Syncfusion.Blazor.Grids.TextAlign.Right">
+                    <Template>
+                        <ScoreBadge Value="@((context as AccountDto)?.HealthScore ?? 0)" />
+                    </Template>
+                </GridColumn>
+            </GridColumns>
+        </SfGrid>
+        </div>
+    </div>
+}
+
+@code {
+    private SfGrid<AccountDto>? gridRef;
+    private List<AccountDto> accounts = new();
+    private bool loading = true;
+    private string? error;
+
+    // Toolbar with Excel/CSV export, column chooser, and search.
+    private static readonly List<string> ToolbarItems = new() { "ExcelExport", "CsvExport", "ColumnChooser", "Search" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            accounts = (await ApiClient.GetAccountsAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task OnToolbarClicking(Syncfusion.Blazor.Navigations.ClickEventArgs args)
+    {
+        if (gridRef is null) return;
+
+        // The grid renders toolbar items with well-known ids; trigger exports by id.
+        var id = args.Item.Id ?? string.Empty;
+        if (id.Contains("excelexport", StringComparison.OrdinalIgnoreCase))
+        {
+            args.Cancel = true;
+            await gridRef.ExportToExcelAsync();
+        }
+        else if (id.Contains("csvexport", StringComparison.OrdinalIgnoreCase))
+        {
+            args.Cancel = true;
+            await gridRef.ExportToCsvAsync();
+        }
+    }
+}

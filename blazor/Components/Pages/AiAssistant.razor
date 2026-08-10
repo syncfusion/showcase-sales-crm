@@ -1,0 +1,137 @@
+@page "/assistant"
+@inject ISalesCrmApiClient ApiClient
+@inject Microsoft.Extensions.AI.IChatClient ChatClient
+
+<PageHeader Title="AI Sales Assistant"
+           Subtitle="Guided recommendations and action suggestions."
+           Icon="assistant" />
+
+@if (loading)
+{
+    <LoadingState />
+}
+else if (!string.IsNullOrEmpty(error))
+{
+    <ErrorState Message="@error" />
+}
+else if (recommendations.Count == 0)
+{
+    <EmptyState Message="No AI recommendations available." />
+}
+else
+{
+    <div class="ai-assistant-layout">
+        <aside class="content-card ai-risk-list">
+            <h2>Risk Queue</h2>
+            @foreach (var item in HighPriorityItems)
+            {
+                <button type="button"
+                        class="risk-item"
+                        @onclick="() => ExecuteRiskPrompt(item)">
+                    <strong>@item.RelatedRecord</strong>
+                    <span>@item.Title</span>
+                    <small>@item.Priority · @Formatters.FormatUsd(item.Amount) · closes @item.CloseDate</small>
+                </button>
+            }
+            @if (HighPriorityItems.Count == 0)
+            {
+                <p class="text-muted">No high priority items.</p>
+            }
+        </aside>
+
+        <div class="content-card ai-assist-panel">
+            <div class="aiassist-container w-full overflow-hidden" style="height: 650px;">
+                <SfAIAssistView @ref="assistViewRef"
+                                Height="650px"
+                                PromptSuggestions="@PromptSuggestions"
+                                PromptSuggestionsHeader="Suggested sales prompts"
+                                PromptPlaceholder="Ask about deal risk, forecast movement, or next best action"
+                                Prompts="@initialPrompts"
+                                ShowHeader="true"
+                                EnableScrollToBottom="true"
+                                PromptRequested="@OnPromptRequested">
+                </SfAIAssistView>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private SfAIAssistView? assistViewRef;
+    private List<AiRecommendationDto> recommendations = new();
+    private bool loading = true;
+    private string? error;
+
+    // Conversation history seeded on load (mirrors React `initialPrompts`).
+    private List<AssistViewPrompt> initialPrompts = new();
+
+    // Prompt suggestion chips shown above the input.
+    private static readonly List<string> PromptSuggestions = new()
+    {
+        "Summarize risks for commit deals",
+        "Which deals may slip this quarter?",
+        "Create a follow-up email for the champion",
+        "Generate a mutual action plan",
+        "Explain why this opportunity is high risk"
+    };
+
+    private List<AiRecommendationDto> HighPriorityItems =>
+        recommendations.Where(x => string.Equals(x.Priority, "High", StringComparison.OrdinalIgnoreCase)).Take(6).ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            recommendations = (await ApiClient.GetAiRecommendationsAsync()).ToList();
+            var top = HighPriorityItems.FirstOrDefault() ?? recommendations.FirstOrDefault();
+            if (top is not null)
+            {
+                initialPrompts = new()
+                {
+                    new() { Prompt = "Summarize risks for commit deals", Response = BuildHtmlResponse("Summarize risks for commit deals") },
+                    new() { Prompt = $"Create a follow-up plan for {top.RelatedRecord}", Response = BuildHtmlResponse($"Create a follow-up plan for {top.RelatedRecord}") }
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    /// <summary>Handles each prompt submission via the registered IChatClient (local by default).</summary>
+    private async Task OnPromptRequested(AssistViewPromptRequestedEventArgs args)
+    {
+        try
+        {
+            var messages = new List<Microsoft.Extensions.AI.ChatMessage>
+            {
+                new(Microsoft.Extensions.AI.ChatRole.System, "You are the Sales CRM Pipeline Intelligence assistant. Use the available recommendations to answer concisely."),
+                new(Microsoft.Extensions.AI.ChatRole.User, args.Prompt ?? string.Empty)
+            };
+            var response = await ChatClient.GetResponseAsync(messages, cancellationToken: CancellationToken.None);
+            args.Response = $"<div>{response.Text}</div>";
+        }
+        catch (Exception ex)
+        {
+            args.Response = $"<div class='state-error'>Unable to generate a response: {ex.Message}</div>";
+        }
+    }
+
+    /// <summary>Risk Queue button handler — runs an explain prompt through the AssistView.</summary>
+    private async Task ExecuteRiskPrompt(AiRecommendationDto item)
+    {
+        if (assistViewRef is not null)
+        {
+            await assistViewRef.ExecutePromptAsync($"Explain why {item.RelatedRecord} is high risk");
+        }
+    }
+
+    /// <summary>Builds an HTML response for pre-seeded prompts using the local responder logic.</summary>
+    private string BuildHtmlResponse(string prompt)
+        => $"<div>{LocalSalesChatClient.BuildDealRiskResponse(recommendations, prompt)}</div>";
+}

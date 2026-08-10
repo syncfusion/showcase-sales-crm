@@ -1,0 +1,198 @@
+@page "/"
+@inject ISalesCrmApiClient ApiClient
+@inject ThemeService ThemeService
+@implements IDisposable
+
+<PageHeader Title="Dashboard"
+           Subtitle="Executive summary for pipeline health and revenue outlook."
+           Icon="dashboard" />
+
+@if (loading)
+{
+    <LoadingState />
+}
+else if (!string.IsNullOrEmpty(error))
+{
+    <ErrorState Message="@error" />
+}
+else if (summary is null || (summary.RecentOpportunities.Count == 0 && summary.StageBreakdown.Count == 0))
+{
+    <EmptyState Message="No dashboard data available." />
+}
+else
+{
+    <div class="dashboard-page">
+        <SfCard CssClass="dashboard-kpi-card content-card">
+            <CardContent>
+                <div class="kpi-grid">
+                    @foreach (var kpi in kpis)
+                    {
+                        <div class="metric-card">
+                            <div class="metric-card-header">
+                                <div class="metric-label">@kpi.Label</div>
+                                <span class="metric-card-icon">
+                                    <AppIcon Name="@kpi.Icon" Size="18" />
+                                </span>
+                            </div>
+                            <div class="metric-value">@kpi.Value</div>
+                        </div>
+                    }
+                </div>
+            </CardContent>
+        </SfCard>
+
+        <div class="content-card dashboard-chart-card">
+            <h2>Pipeline Stage Breakdown</h2>
+            <div class="w-full overflow-x-auto">
+                <SfChart Width="100%" Height="320px" Title="Stage Breakdown" Theme="@ChartTheme" Background="transparent">
+                    <ChartPrimaryXAxis ValueType="Syncfusion.Blazor.Charts.ValueType.Category">
+                        <ChartAxisMajorGridLines Width="0" />
+                        <ChartAxisMajorTickLines Width="0" />
+                    </ChartPrimaryXAxis>
+                    <ChartPrimaryYAxis Title="Pipeline Value" Minimum="0" Interval="500000">
+                        <ChartAxisLineStyle />
+                        <ChartAxisMajorTickLines Width="0" />
+                    </ChartPrimaryYAxis>
+                    <ChartTooltipSettings Enable="true" />
+                    <ChartSeriesCollection>
+                        <ChartSeries DataSource="@summary.StageBreakdown"
+                                    XName="Stage"
+                                    YName="Value"
+                                    Type="Syncfusion.Blazor.Charts.ChartSeriesType.Column"
+                                    Name="Pipeline Value"
+                                    ColumnWidth="0.6">
+                            <ChartMarker>
+                                <ChartDataLabel Visible="true" Format="C">
+                                    <ChartDataLabelFont FontWeight="600"></ChartDataLabelFont>
+                                </ChartDataLabel>
+                            </ChartMarker>
+                        </ChartSeries>
+                    </ChartSeriesCollection>
+                    <ChartEvents OnDataLabelRender="OnDataLabelRender" OnAxisLabelRender="OnAxisLabelRender"
+                        TooltipRender="OnTooltipRender"></ChartEvents>
+                </SfChart>
+            </div>
+        </div>
+
+        <div class="content-card dashboard-table-card">
+            <h2>Recent Opportunities</h2>
+            <div class="w-full overflow-x-auto">
+                <SfGrid DataSource="@summary.RecentOpportunities" AllowSorting="true" AllowPaging="true" AllowTextWrap="true" Height="360px">
+                    <GridPageSettings PageSize="8" />
+                    <GridTextWrapSettings WrapMode="Syncfusion.Blazor.Grids.WrapMode.Both" />
+                    <GridColumns>
+                        <GridColumn Field="Name" HeaderText="Opportunity" Width="220" />
+                        <GridColumn Field="Account" HeaderText="Account" Width="200" />
+                        <GridColumn Field="Stage" HeaderText="Stage" Width="140" TextAlign="Syncfusion.Blazor.Grids.TextAlign.Center">
+                            <Template>
+                                <StatusBadge Value="@Formatters.StageLabel((context as RecentOpportunityDto)?.Stage ?? string.Empty)" />
+                            </Template>
+                        </GridColumn>
+                        <GridColumn Field="ExpectedCloseDate" HeaderText="Expected Close Date" Width="160" TextAlign="Syncfusion.Blazor.Grids.TextAlign.Center" Type="Syncfusion.Blazor.Grids.ColumnType.Date" Format="MMM dd, yyyy" />
+                        <GridColumn Field="Amount" HeaderText="Amount" Width="150" TextAlign="Syncfusion.Blazor.Grids.TextAlign.Right" Format="C2" />
+                    </GridColumns>
+                </SfGrid>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private DashboardSummaryDto? summary;
+    private bool loading = true;
+    private string? error;
+    private List<Kpi> kpis = new();
+
+    private Theme ChartTheme => ThemeService.IsDark ? Theme.Tailwind3Dark : Theme.Tailwind3;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ThemeService.ThemeChanged += OnThemeChanged;
+        try
+        {
+            summary = await ApiClient.GetDashboardAsync();
+            var openOpportunities = summary.StageBreakdown
+                .Where(x => !IsTerminalStage(x.Stage))
+                .Sum(x => x.Count);
+
+            kpis =
+            [
+                new("Revenue", Formatters.FormatCompactUsd(summary.Revenue), "revenue"),
+                new("Pipeline Value", Formatters.FormatCompactUsd(summary.PipelineValue), "pipeline"),
+                new("Weighted Forecast", Formatters.FormatCompactUsd(summary.WeightedForecast), "forecast"),
+                new("Open Opportunities", openOpportunities.ToString(), "work"),
+                new("Win Rate", Formatters.FormatPercent((int)Math.Round(summary.WinRate)), "target")
+            ];
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private static bool IsTerminalStage(string stage)
+        => stage is "ClosedWon" or "ClosedLost";
+
+    private void OnThemeChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => ThemeService.ThemeChanged -= OnThemeChanged;
+
+    private void OnAxisLabelRender(AxisLabelRenderEventArgs args)
+    {
+        if (args.Axis.Name == "PrimaryYAxis")
+        {
+            var value = Convert.ToDouble(args.Text);
+
+            args.Text = FormatCurrencyShort(value);
+        }
+    }
+
+    private void OnDataLabelRender(TextRenderEventArgs args)
+    {
+        if (args.Point.Y != null)
+        {
+            var value = Convert.ToDouble(args.Point.Y);
+
+            // Example: 2,580,000 => $2.6M
+            args.Text = $"${value / 1_000_000:0.##}M";
+        }
+    }
+
+    private static string FormatCurrencyShort(double value)
+    {
+        if (value == 0)
+        {
+            return "$0";
+        }
+
+        if (value >= 1_000_000)
+        {
+            return $"${value / 1_000_000:0.#}M";
+        }
+
+        if (value >= 1_000)
+        {
+            return $"${value / 1_000:0.#}K";
+        }
+
+        return $"${value:0}";
+    }
+
+    private void OnTooltipRender(Syncfusion.Blazor.Charts.TooltipRenderEventArgs args)
+    {
+            var value = Convert.ToDouble(args.Data.PointY);
+
+        args.Text = $"{FormatCurrencyWithCommas(value)}";
+    }
+
+    private static string FormatCurrencyWithCommas(double value)
+    {
+        return $"${value:N0}";
+    }
+
+    private sealed record Kpi(string Label, string Value, string Icon);
+}

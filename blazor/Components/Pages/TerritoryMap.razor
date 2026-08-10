@@ -1,0 +1,88 @@
+@page "/territories"
+@inject ISalesCrmApiClient ApiClient
+
+<PageHeader Title="Territory Map"
+           Subtitle="Visualize coverage and performance by territory."
+           Icon="territories" />
+
+@if (loading)
+{
+    <LoadingState />
+}
+else if (!string.IsNullOrEmpty(error))
+{
+    <ErrorState Message="@error" />
+}
+else if (territories.Count == 0)
+{
+    <EmptyState Message="No territory data available." />
+}
+else
+{
+    <div class="territory-page">
+        <div class="territory-layout">
+            <div class="content-card territory-map-card">
+                <div class="w-full overflow-hidden">
+                <SfMaps Width="100%" Height="480px">
+                    <MapsCenterPosition Latitude="39.5" Longitude="-98.35" />
+                    <MapsZoomSettings Enable="true" ZoomFactor="4" />
+                    <MapsLayers>
+                        <MapsLayer TValue="TerritorySummaryDto"
+                                   UrlTemplate="https://tile.openstreetmap.org/level/tileX/tileY.png">
+                            <MapsMarkerSettings>
+                                <MapsMarker TValue="TerritorySummaryDto" Visible="true" Height="20" Width="20" Shape="Syncfusion.Blazor.Maps.MarkerType.Circle" DataSource="@territories">
+                                    <MapsMarkerTooltipSettings Visible="true" ValuePath="Name" />
+                                </MapsMarker>
+                            </MapsMarkerSettings>
+                        </MapsLayer>
+                    </MapsLayers>
+                </SfMaps>
+                </div>
+            </div>
+
+            <div class="territory-summary">
+                @foreach (var territory in territories.Take(6))
+                {
+                    <div class="content-card territory-card">
+                        <strong>@territory.Name</strong>
+                        <span>@territory.Region</span>
+                        <div>
+                            <span>Revenue</span>
+                            <b>@Formatters.FormatUsd(territory.Revenue)</b>
+                        </div>
+                        <div>
+                            <span>Accounts</span>
+                            <b>@territory.Accounts</b>
+                        </div>
+                        <div>
+                            <span>Win Rate</span>
+                            <WinRateBadge Value="@territory.WinRate" />
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<TerritorySummaryDto> territories = new();
+    private bool loading = true;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            territories = (await ApiClient.GetTerritoriesAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+}

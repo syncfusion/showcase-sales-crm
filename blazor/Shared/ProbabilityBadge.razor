@@ -1,0 +1,8 @@
+@* Probability percentage badge. *@
+@using SalesCrm.Blazor.Services
+<span class="metric-badge @Badges.ToneClassForProbability(Value)">
+    @Formatters.FormatPercent(Value)
+</span>
+@code {
+    [Parameter] public int Value { get; set; }
+}

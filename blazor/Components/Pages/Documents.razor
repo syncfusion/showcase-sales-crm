@@ -1,0 +1,142 @@
+@page "/documents"
+@inject ISalesCrmApiClient ApiClient
+
+<PageHeader Title="Documents"
+           Subtitle="Manage proposals, templates, and generated artifacts."
+           Icon="documents" />
+
+@if (loading)
+{
+    <LoadingState />
+}
+else if (!string.IsNullOrEmpty(error))
+{
+    <ErrorState Message="@error" />
+}
+else if (documents.Count == 0)
+{
+    <EmptyState Message="No documents available." />
+}
+else
+{
+    <div class="documents-layout">
+        <aside class="documents-list content-card">
+            <h2>Document Templates</h2>
+            @foreach (var doc in documents.Take(12))
+            {
+                <button type="button"
+                        class="@($"document-list-item {(selected?.Id == doc.Id ? "active" : null)}")"
+                        @onclick="() => SelectDocument(doc)">
+                    <strong>@doc.Title</strong>
+                    <span>@doc.Type · @doc.Account</span>
+                </button>
+            }
+        </aside>
+
+        <div class="document-editor-panel content-card">
+            @if (selected is not null)
+            {
+                <div class="document-meta">
+                    <div>
+                        <h2>@selected.Title</h2>
+                        <p>@selected.Account · @selected.Opportunity</p>
+                    </div>
+                    <span>@selected.Status</span>
+                </div>
+                <div class="w-full overflow-hidden">
+                <SfDocumentEditorContainer @ref="editorContainer"
+                                          Height="560px"
+                                          EnableToolbar="true"
+                                          RestrictEditing="false">
+                    <DocumentEditorContainerEvents Created="@(EventCallback.Factory.Create(this, OnEditorCreated))" />
+                </SfDocumentEditorContainer>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted">Select a template on the left to preview.</p>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private SfDocumentEditorContainer? editorContainer;
+    private List<DocumentTemplateDto> documents = new();
+    private DocumentTemplateDto? selected;
+    private bool loading = true;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            documents = (await ApiClient.GetDocumentsAsync()).ToList();
+            selected = documents.FirstOrDefault();
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task SelectDocument(DocumentTemplateDto doc)
+    {
+        selected = doc;
+        StateHasChanged();
+        // After re-render, populate the editor with the new proposal text.
+        await PopulateEditorAsync();
+    }
+
+    /// <summary>Called when the DocumentEditor container has been created/initialized.</summary>
+    private async Task OnEditorCreated()
+    {
+        await PopulateEditorAsync();
+    }
+
+    /// <summary>Opens a blank document in the editor and inserts the generated proposal text.</summary>
+    private async Task PopulateEditorAsync()
+    {
+        if (editorContainer is null || selected is null) return;
+
+        // Ensure the editor starts from a blank document for each template.
+        try
+        {
+            await editorContainer.DocumentEditor.OpenBlankAsync();
+        }
+        catch
+        {
+            // OpenBlankAsync may throw if already blank on first init — safe to ignore.
+        }
+
+        // Insert the proposal text line by line; '\n' characters are rendered as new paragraphs.
+        var text = string.Join('\n', BuildProposalLines(selected));
+        await editorContainer.DocumentEditor.Editor.InsertTextAsync(text);
+        await editorContainer.DocumentEditor.FocusAsync();
+    }
+
+    private static List<string> BuildProposalLines(DocumentTemplateDto doc)
+    {
+        return new List<string>
+        {
+            doc.Title,
+            string.Empty,
+            $"Account: {doc.Account}",
+            $"Opportunity: {doc.Opportunity}",
+            $"Owner: {doc.Owner}",
+            $"Status: {doc.Status}",
+            string.Empty,
+            "Executive Summary",
+            $"{doc.Account} is evaluating a revenue workflow improvement. This document captures the commercial proposal, next steps, and mutual action plan for the buying team.",
+            string.Empty,
+            "Recommended Next Steps",
+            "1. Confirm decision criteria and security owner.",
+            "2. Align implementation milestones with the target close date.",
+            "3. Finalize pricing, legal review, and executive approval."
+        };
+    }
+}

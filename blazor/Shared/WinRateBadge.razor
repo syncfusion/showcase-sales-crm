@@ -1,0 +1,8 @@
+@* Win-rate badge showing formatted percent + suffix. *@
+@using SalesCrm.Blazor.Services
+<span class="metric-badge @Badges.ToneClassForScore(Value)">
+    @Formatters.FormatPercent(Value) win rate
+</span>
+@code {
+    [Parameter] public int Value { get; set; }
+}

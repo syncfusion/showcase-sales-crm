@@ -1,0 +1,21 @@
+@* Reusable Lucide static SVG icon. Renders inline SVG markup (no JS / no fonts). *@
+@if (!string.IsNullOrEmpty(InnerMarkup))
+{
+    <svg xmlns="http://www.w3.org/2000/svg"
+         width="@Size"
+         height="@Size"
+         viewBox="0 0 24 24"
+         fill="none"
+         stroke="currentColor"
+         stroke-width="@StrokeWidth"
+         stroke-linecap="round"
+         stroke-linejoin="round"
+         class="@($"lucide-icon {Class}")"
+         style="@($"width:{Size}px;height:{Size}px;display:block")"
+         role="img"
+         aria-label="@AriaLabel"
+         aria-hidden="@(string.IsNullOrEmpty(AriaLabel) ? true : false)">
+        <title>@(string.IsNullOrEmpty(Title) ? AriaLabel : Title)</title>
+        @((MarkupString)InnerMarkup)
+    </svg>
+}

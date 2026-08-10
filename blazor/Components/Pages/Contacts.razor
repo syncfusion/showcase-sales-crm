@@ -1,0 +1,93 @@
+@page "/contacts"
+@inject ISalesCrmApiClient ApiClient
+
+<PageHeader Title="Contacts"
+           Subtitle="Track buyer relationships and communication roles."
+           Icon="contacts" />
+
+@if (loading)
+{
+    <LoadingState />
+}
+else if (!string.IsNullOrEmpty(error))
+{
+    <ErrorState Message="@error" />
+}
+else if (contacts.Count == 0)
+{
+    <EmptyState Message="No contacts found." />
+}
+else
+{
+    <div class="content-card">
+        <div class="w-full overflow-x-auto">
+        <SfGrid @ref="gridRef"
+                DataSource="@contacts"
+                AllowPaging="true"
+                AllowSorting="true"
+                AllowFiltering="true"
+                AllowGrouping="true"
+                AllowTextWrap="true"
+                AllowResizing="true"
+                AllowExcelExport="true"
+                AllowCsvExport="true"
+                ShowColumnMenu="true"
+                Toolbar="@ToolbarItems"
+                Height="460px">
+            <GridPageSettings PageSize="10" PageCount="5" />
+            <GridFilterSettings Type="Syncfusion.Blazor.Grids.FilterType.Menu" />
+            <GridTextWrapSettings WrapMode="Syncfusion.Blazor.Grids.WrapMode.Both" />
+            <GridGroupSettings ShowDropArea="true" ShowUngroupButton="true" />
+            <GridEvents TValue="ContactDto" OnToolbarClick="OnToolbarClicking" />
+            <GridColumns>
+                <GridColumn Field="Name" HeaderText="Contact" Width="180" />
+                <GridColumn Field="Account" HeaderText="Account" Width="230" />
+                <GridColumn Field="Role" HeaderText="Role" Width="200" />
+                <GridColumn Field="Email" HeaderText="Email" Width="300" />
+            </GridColumns>
+        </SfGrid>
+        </div>
+    </div>
+}
+
+@code {
+    private SfGrid<ContactDto>? gridRef;
+    private List<ContactDto> contacts = new();
+    private bool loading = true;
+    private string? error;
+
+    private static readonly List<string> ToolbarItems = new() { "ExcelExport", "CsvExport", "ColumnChooser", "Search" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            contacts = (await ApiClient.GetContactsAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task OnToolbarClicking(Syncfusion.Blazor.Navigations.ClickEventArgs args)
+    {
+        if (gridRef is null) return;
+
+        var id = args.Item.Id ?? string.Empty;
+        if (id.Contains("excelexport", StringComparison.OrdinalIgnoreCase))
+        {
+            args.Cancel = true;
+            await gridRef.ExportToExcelAsync();
+        }
+        else if (id.Contains("csvexport", StringComparison.OrdinalIgnoreCase))
+        {
+            args.Cancel = true;
+            await gridRef.ExportToCsvAsync();
+        }
+    }
+}

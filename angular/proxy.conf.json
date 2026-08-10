@@ -1,0 +1,18 @@
+{
+  "/api": {
+    "target": "https://localhost:59527",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/swagger": {
+    "target": "https://localhost:59527",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/openapi": {
+    "target": "https://localhost:59527",
+    "secure": false,
+    "changeOrigin": true
+  }
+}

@@ -1,0 +1,7 @@
+@* Empty data state. *@
+<div class="state-block state-empty" role="status">
+    @(Message ?? "No records found.")
+</div>
+@code {
+    [Parameter] public string? Message { get; set; }
+}

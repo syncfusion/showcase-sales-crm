@@ -1,0 +1,48 @@
+<div class="app-shell">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button
+        class="sidebar-toggle"
+        type="button"
+        (click)="toggleSidebar()"
+        aria-label="Toggle navigation"
+        [attr.aria-expanded]="sidebarOpen()"
+      >
+        <span aria-hidden="true">☰</span>
+      </button>
+      <strong>Sales CRM Pipeline Intelligence</strong>
+    </div>
+    <button class="theme-toggle" type="button" (click)="themeService.toggle()">
+      <app-icon [name]="themeService.theme() === 'dark' ? 'sun' : 'moon'" [size]="17" />
+      {{ themeService.theme() === 'dark' ? 'Light' : 'Dark' }}
+    </button>
+  </header>
+
+  <div class="app-body">
+    <button
+      class="sidebar-overlay"
+      [class.open]="sidebarOpen()"
+      type="button"
+      (click)="closeSidebar()"
+      aria-label="Close navigation"
+    ></button>
+    <nav class="sidebar" [class.open]="sidebarOpen()" aria-label="Primary navigation">
+      <div class="sidebar-title">Sales CRM</div>
+      @for (item of navItems; track item.to) {
+        <a
+          [routerLink]="item.to"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: item.to === '/' }"
+          (click)="closeSidebar()"
+        >
+          <app-icon [name]="item.icon" />
+          <span>{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+
+    <main class="main-content">
+      <router-outlet />
+    </main>
+  </div>
+</div>

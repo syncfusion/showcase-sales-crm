@@ -1,0 +1,82 @@
+@page "/activities"
+@inject ISalesCrmApiClient ApiClient
+
+<PageHeader Title="Activities Calendar"
+           Subtitle="Schedule meetings, follow-ups, and tasks."
+           Icon="activities" />
+
+@if (loading)
+{
+    <LoadingState />
+}
+else if (!string.IsNullOrEmpty(error))
+{
+    <ErrorState Message="@error" />
+}
+else if (events.Count == 0)
+{
+    <EmptyState Message="No activities found." />
+}
+else
+{
+    <div class="content-card">
+        <div class="w-full overflow-x-auto">
+        <SfSchedule TValue="ScheduleEvent"
+                    
+                    Height="640px"
+                    SelectedDate="@SelectedDate"
+                    CurrentView="Syncfusion.Blazor.Schedule.View.Month">
+            <ScheduleEventSettings TValue="ScheduleEvent" DataSource="@events"  />
+            <ScheduleViews>
+                <ScheduleView Option="Syncfusion.Blazor.Schedule.View.Day" />
+                <ScheduleView Option="Syncfusion.Blazor.Schedule.View.Week" />
+                <ScheduleView Option="Syncfusion.Blazor.Schedule.View.WorkWeek" />
+                <ScheduleView Option="Syncfusion.Blazor.Schedule.View.Month" />
+                <ScheduleView Option="Syncfusion.Blazor.Schedule.View.Agenda" />
+            </ScheduleViews>
+        </SfSchedule>
+        </div>
+    </div>
+}
+
+@code {
+    private List<ScheduleEvent> events = new();
+    private bool loading = true;
+    private string? error;
+
+    private static readonly DateTime SelectedDate = DateTime.Today;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var raw = await ApiClient.GetActivitiesAsync();
+            events = raw.Select(a => new ScheduleEvent
+            {
+                Id = a.Id,
+                Subject = $"{a.Subject} · {a.Account}",
+                StartTime = a.StartTime,
+                EndTime = a.EndTime,
+                CategoryColor = string.Equals(a.Status, "Completed", StringComparison.OrdinalIgnoreCase) ? "#12b76a" : "#175cd3"
+            }).ToList();
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    // Lightweight schedule event model that includes a CategoryColor field.
+    public sealed class ScheduleEvent
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Subject { get; set; } = string.Empty;
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
+        public string CategoryColor { get; set; } = "#175cd3";
+    }
+}

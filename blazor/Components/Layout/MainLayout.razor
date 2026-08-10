@@ -1,0 +1,43 @@
+﻿@inherits LayoutComponentBase
+@inject ThemeService ThemeService
+
+@* CRM application shell: top header + sidebar navigation + main content area. *@
+<div class="app-shell">
+    <header class="topbar">
+        <div class="topbar-left">
+            <button type="button" class="sidebar-toggle" @onclick="ToggleSidebar" aria-label="Toggle navigation">
+                <AppIcon Name="menu" Size="20" />
+            </button>
+            <strong>Sales CRM Pipeline Intelligence</strong>
+        </div>
+        <button type="button" class="theme-toggle" @onclick="ToggleThemeAsync" aria-label="@(ThemeService.IsDark ? "Switch to light theme" : "Switch to dark theme")">
+            <AppIcon Name="@(ThemeService.IsDark ? "sun" : "moon")" Size="16" />
+            <span class="theme-toggle-label">@(ThemeService.IsDark ? "Light" : "Dark")</span>
+        </button>
+    </header>
+    <div class="app-body">
+        <div class="@($"sidebar-overlay {(sidebarOpen ? "open" : "")}")" @onclick="ToggleSidebar" aria-hidden="true"></div>
+        <NavMenu Class=@(sidebarOpen ? "open" : "") />
+        <main class="main-content">
+            @Body
+        </main>
+    </div>
+</div>
+
+@code {
+    private bool sidebarOpen;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await ThemeService.InitializeAsync();
+            StateHasChanged();
+        }
+    }
+
+    private async Task ToggleThemeAsync() => await ThemeService.ToggleAsync();
+
+    private void ToggleSidebar() => sidebarOpen = !sidebarOpen;
+}
+

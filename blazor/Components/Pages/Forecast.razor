@@ -1,0 +1,233 @@
+@page "/forecast"
+@inject ISalesCrmApiClient ApiClient
+@inject ThemeService ThemeService
+@implements IDisposable
+
+<PageHeader Title="Forecast"
+           Subtitle="Commit, best-case, pipeline, and weighted forecast summary."
+           Icon="forecast" />
+
+@if (loading)
+{
+    <LoadingState />
+}
+else if (!string.IsNullOrEmpty(error))
+{
+    <ErrorState Message="@error" />
+}
+else if (forecast is null)
+{
+    <EmptyState Message="No forecast data available." />
+}
+else
+{
+    <div class="forecast-summary-strip">
+        <SfCard CssClass="forecast-summary-item content-card">
+            <CardContent>
+             <div class="forecast-card-header">Commit</div>
+                <strong>@Formatters.FormatCompactUsd(forecast.Commit)</strong>
+            </CardContent>
+        </SfCard>
+        <SfCard CssClass="forecast-summary-item content-card">
+            <CardContent>
+                 <div class="forecast-card-header">Best Case</div>
+                <strong>@Formatters.FormatCompactUsd(forecast.BestCase)</strong>
+            </CardContent>
+        </SfCard>
+        <SfCard CssClass="forecast-summary-item content-card">
+            <CardContent>
+                 <div class="forecast-card-header">Pipeline</div>
+                <strong>@Formatters.FormatCompactUsd(forecast.Pipeline)</strong>
+            </CardContent>
+        </SfCard>
+        <SfCard CssClass="forecast-summary-item content-card">
+            <CardContent>
+                 <div class="forecast-card-header">Weighted</div>
+                <strong>@Formatters.FormatCompactUsd(forecast.Weighted)</strong>
+            </CardContent>
+        </SfCard>
+    </div>
+
+        <div class="content-card">
+            <h2>Forecast Trend</h2>
+        @if (forecast.Trend.Count > 0)
+        {
+            <div class="w-full overflow-x-auto">
+            <SfChart Width="100%" Height="320px" Title="Weighted Forecast Trend" Theme="@ChartTheme">
+                <ChartPrimaryXAxis ValueType="Syncfusion.Blazor.Charts.ValueType.DateTime"
+                   LabelFormat="MMM-yyyy"
+                   IntervalType="Syncfusion.Blazor.Charts.IntervalType.Months"
+                   Interval="1">
+                    <ChartAxisMajorGridLines  Width="0"/>
+                    <ChartAxisMajorTickLines  Width="0" />
+                </ChartPrimaryXAxis>
+                <ChartPrimaryYAxis Title="Weighted Forecast"  Interval="40000">
+                    <ChartAxisMajorGridLines  Width="1" />
+                    <ChartAxisMajorTickLines  Width="0" />
+                </ChartPrimaryYAxis>
+                <ChartTooltipSettings Enable="true" />
+                <ChartSeriesCollection>
+    <ChartSeries DataSource="@actualTrend"
+                 XName="Period"
+                 YName="Weighted"
+                 Type="Syncfusion.Blazor.Charts.ChartSeriesType.Line"
+                 Name="Actual" Width="2">
+        <ChartMarker Visible="true" Width="7" Height="7"
+                     Shape="Syncfusion.Blazor.Charts.ChartShape.Circle">
+            <ChartDataLabel Visible="true" Format="C0">
+                <ChartDataLabelFont FontWeight="600"></ChartDataLabelFont>
+            </ChartDataLabel>
+        </ChartMarker>
+    </ChartSeries>
+
+    <ChartSeries DataSource="@forecastTrend"
+                 XName="Period"
+                 YName="Weighted"
+                 Type="Syncfusion.Blazor.Charts.ChartSeriesType.Line"
+                 Name="Forecast"
+                 Width="2"
+                 DashArray="6,4">
+        <ChartMarker Visible="true"
+                     Width="7"
+                     Height="7"
+                     Shape="Syncfusion.Blazor.Charts.ChartShape.Circle">
+            <ChartDataLabel Visible="true" Format="C0">
+                <ChartDataLabelFont FontWeight="600"></ChartDataLabelFont>
+            </ChartDataLabel>
+        </ChartMarker>
+    </ChartSeries>
+</ChartSeriesCollection>
+<ChartEvents OnDataLabelRender="OnDataLabelRender" OnAxisLabelRender="OnAxisLabelRender"></ChartEvents>
+</SfChart>
+            </div>
+        }
+        else
+        {
+            <p class="text-muted">Trend data is not available.</p>
+        }
+    </div>
+}
+
+@code {
+    private ForecastSummaryDto? forecast;
+    private bool loading = true;
+    private string? error;
+
+    private Theme ChartTheme => ThemeService.IsDark ? Theme.Tailwind3Dark : Theme.Tailwind3;
+
+    private List<ForecastTrendPointDto> actualTrend = [];
+    private List<ForecastTrendPointDto> forecastTrend = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        ThemeService.ThemeChanged += OnThemeChanged;
+
+        try
+        {
+            forecast = await ApiClient.GetForecastAsync();
+
+            foreach (var point in forecast.Trend)
+            {
+                if (point.Weighted == 0)
+                {
+                    point.Weighted = forecast.Weighted;
+                }
+            }
+
+            SplitActualAndForecastTrend();
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private void OnThemeChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => ThemeService.ThemeChanged -= OnThemeChanged;
+
+     private void OnAxisLabelRender(AxisLabelRenderEventArgs args)
+    {
+        if (args.Axis.Name == "PrimaryYAxis")
+        {
+            var value = Convert.ToDouble(args.Text);
+
+            args.Text = FormatCurrencyShort(value);
+        }
+    }
+
+    private void SplitActualAndForecastTrend()
+    {
+        if (forecast is null || forecast.Trend.Count == 0)
+        {
+            actualTrend = [];
+            forecastTrend = [];
+            return;
+        }
+
+        var currentMonth = new DateOnly(DateTime.Today.Year, DateTime.Today.Month, 1);
+
+        actualTrend = forecast.Trend
+            .Where(x => ParsePeriod(x.Period) < currentMonth)
+            .OrderBy(x => ParsePeriod(x.Period))
+            .ToList();
+
+        forecastTrend = forecast.Trend
+            .Where(x => ParsePeriod(x.Period) >= currentMonth)
+            .OrderBy(x => ParsePeriod(x.Period))
+            .ToList();
+
+        // Optional anchor point: connects the solid actual line with the dotted forecast line.
+        var lastActualPoint = actualTrend.LastOrDefault();
+
+        if (lastActualPoint is not null && forecastTrend.Count > 0)
+        {
+            forecastTrend.Insert(0, lastActualPoint);
+        }
+    }
+
+    private static DateOnly ParsePeriod(string period)
+    {
+        return DateOnly.TryParseExact(
+            $"{period}-01",
+            "yyyy-MM-dd",
+            System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.None,
+            out var parsedDate)
+            ? parsedDate
+            : DateOnly.MinValue;
+    }
+
+    private void OnDataLabelRender(TextRenderEventArgs args)
+    {
+        if (args.Point.Y != null)
+        {
+            var value = Convert.ToDouble(args.Point.Y);
+            args.Text = $"${value / 1_000:0.#}K";
+        }
+    }
+
+    private static string FormatCurrencyShort(double value)
+    {
+        if (value == 0)
+        {
+            return "$0";
+        }
+
+        if (value >= 1_000_000)
+        {
+            return $"${value / 1_000_000:0.#}M";
+        }
+
+        if (value >= 1_000)
+        {
+            return $"${value / 1_000:0.#}K";
+        }
+
+        return $"${value:0}";
+    }
+}

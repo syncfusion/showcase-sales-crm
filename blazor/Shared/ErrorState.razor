@@ -1,0 +1,7 @@
+@* Error state. *@
+<div class="state-block state-error" role="alert">
+    @(Message ?? "Something went wrong.")
+</div>
+@code {
+    [Parameter] public string? Message { get; set; }
+}

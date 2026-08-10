@@ -1,0 +1,17 @@
+@using SalesCrm.Blazor.Components.Shared
+@* Page header with icon box, title, and subtitle. *@
+<div class="page-header">
+    @if (!string.IsNullOrEmpty(Icon))
+    {
+        <span class="page-header-icon">
+            <AppIcon Name="@Icon" Size="20" />
+        </span>
+    }
+    <div>
+        <h1>@Title</h1>
+        @if (!string.IsNullOrEmpty(Subtitle))
+        {
+            <p>@Subtitle</p>
+        }
+    </div>
+</div>

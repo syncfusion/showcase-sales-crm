@@ -1,0 +1,29 @@
+import { Routes } from '@angular/router';
+import { AccountsPageComponent } from './pages/accounts/accounts-page.component';
+import { AccountDetailsPageComponent } from './pages/accounts/account-details-page.component';
+import { ActivitiesCalendarPageComponent } from './pages/activities/activities-calendar-page.component';
+import { AdminSeedDataPageComponent } from './pages/admin/admin-seed-data-page.component';
+import { AiAssistantPageComponent } from './pages/assistant/ai-assistant-page.component';
+import { ContactsPageComponent } from './pages/contacts/contacts-page.component';
+import { DashboardPageComponent } from './pages/dashboard/dashboard-page.component';
+import { DocumentsPageComponent } from './pages/documents/documents-page.component';
+import { ForecastPageComponent } from './pages/forecast/forecast-page.component';
+import { OpportunitiesPageComponent } from './pages/opportunities/opportunities-page.component';
+import { PipelineKanbanPageComponent } from './pages/pipeline/pipeline-kanban-page.component';
+import { TerritoryMapPageComponent } from './pages/territories/territory-map-page.component';
+
+export const routes: Routes = [
+  { path: '', component: DashboardPageComponent },
+  { path: 'accounts', component: AccountsPageComponent },
+  { path: 'accounts/:accountId', component: AccountDetailsPageComponent },
+  { path: 'contacts', component: ContactsPageComponent },
+  { path: 'opportunities', component: OpportunitiesPageComponent },
+  { path: 'pipeline', component: PipelineKanbanPageComponent },
+  { path: 'forecast', component: ForecastPageComponent },
+  { path: 'activities', component: ActivitiesCalendarPageComponent },
+  { path: 'territories', component: TerritoryMapPageComponent },
+  { path: 'documents', component: DocumentsPageComponent },
+  { path: 'assistant', component: AiAssistantPageComponent },
+  { path: 'admin', component: AdminSeedDataPageComponent },
+  { path: '**', redirectTo: '' }
+];

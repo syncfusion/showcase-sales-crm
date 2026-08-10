@@ -1,0 +1,1467 @@
+@import "tailwindcss";
+
+:root {
+  --font-family:
+    Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --app-bg: #f6f8fb;
+  --surface: #ffffff;
+  --surface-muted: #f8fafc;
+  --surface-hover: #eef4ff;
+  --border: #e5e9f0;
+  --border-strong: #d0d5dd;
+  --text: #172033;
+  --text-muted: #667085;
+  --brand: #175cd3;
+  --brand-soft: #eef4ff;
+  --brand-border: #d6e4ff;
+  --shadow: 0 1px 3px rgba(16, 24, 40, 0.08);
+  --success-bg: #ecfdf3;
+  --success-text: #027a48;
+  --success-border: #abefc6;
+  --warning-bg: #fffaeb;
+  --warning-text: #b54708;
+  --warning-border: #fedf89;
+  --danger-bg: #fef3f2;
+  --danger-text: #b42318;
+  --danger-border: #fecdca;
+  --neutral-bg: #f2f4f7;
+  --neutral-text: #344054;
+  --neutral-border: #d0d5dd;
+  --chart-grid: #e5e9f0;
+}
+
+:root[data-theme="dark"] {
+  --app-bg: #0f172a;
+  --surface: #111827;
+  --surface-muted: #1f2937;
+  --surface-hover: #172554;
+  --border: #334155;
+  --border-strong: #475569;
+  --text: #e5e7eb;
+  --text-muted: #94a3b8;
+  --brand: #93c5fd;
+  --brand-soft: #1e3a8a;
+  --brand-border: #1d4ed8;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --success-bg: #052e1b;
+  --success-text: #86efac;
+  --success-border: #166534;
+  --warning-bg: #451a03;
+  --warning-text: #fbbf24;
+  --warning-border: #92400e;
+  --danger-bg: #450a0a;
+  --danger-text: #fca5a5;
+  --danger-border: #991b1b;
+  --neutral-bg: #1f2937;
+  --neutral-text: #cbd5e1;
+  --neutral-border: #475569;
+  --chart-grid: #334155;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background: var(--app-bg);
+  color: var(--text);
+  overflow: hidden;
+}
+
+a {
+  color: inherit;
+}
+
+.text-brand {
+  color: var(--brand);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.text-brand:hover {
+  text-decoration: underline;
+}
+
+.app-shell {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--app-bg);
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  font-weight: 700;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.topbar-left strong {
+  font-size: clamp(14px, 2.5vw, 17px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 6px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.sidebar-toggle:hover {
+  background: var(--surface-hover);
+  color: var(--brand);
+}
+
+.theme-toggle {
+  background: var(--surface-muted);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.theme-toggle:hover {
+  background: var(--surface-hover);
+  color: var(--brand);
+}
+
+.app-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  height: 100%;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 24px 18px;
+}
+
+.sidebar-overlay {
+  display: none;
+}
+
+.sidebar-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+
+.sidebar-item {
+  margin-bottom: 4px;
+}
+
+.sidebar a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  color: var(--neutral-text);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.sidebar a svg {
+  flex: 0 0 auto;
+}
+
+.sidebar a:hover,
+.sidebar a.active {
+  background: var(--surface-hover);
+  color: var(--brand);
+}
+
+.main-content {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px 16px 40px;
+  box-sizing: border-box;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.page-header-icon {
+  display: inline-flex;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d6e4ff;
+  border-radius: 12px;
+  border-color: var(--brand-border);
+  background: var(--brand-soft);
+  color: var(--brand);
+  flex: 0 0 auto;
+}
+
+.page-header h1 {
+  font-size: clamp(20px, 3.5vw, 28px);
+  line-height: 1.2;
+  margin: 0 0 6px;
+}
+
+.page-header p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.content-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: var(--shadow);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.content-card h2 {
+  margin: 0 0 16px;
+  font-size: clamp(16px, 2.2vw, 20px);
+}
+
+.metric-card {
+  min-height: 72px;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  min-width: 0;
+}
+
+.metric-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.metric-card-icon {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: var(--success-bg);
+  color: var(--success-text);
+  flex-shrink: 0;
+}
+
+.metric-label {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 0;
+}
+
+.metric-value {
+  font-size: clamp(20px, 2.5vw, 24px);
+  line-height: 1;
+  font-weight: 700;
+  word-break: break-word;
+}
+
+/* Syncfusion Card layout for dashboard KPI tiles. Reuses .metric-card as the
+   surface and overlays the e-card DOM documented at
+   https://ej2.syncfusion.com/react/documentation/card/getting-started so the
+   label + icon sit in the header row and the metric value sits in the content. */
+.metric-card.e-card .e-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding: 0;
+}
+
+.metric-card.e-card .e-card-header .e-card-header-caption {
+  margin: 0;
+}
+
+.metric-card.e-card .e-card-header .e-card-title {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 600;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.metric-card.e-card .e-card-header .e-card-header-icon {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: var(--success-bg);
+  color: var(--success-text);
+  flex-shrink: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.metric-card.e-card .e-card-content {
+  padding: 0;
+}
+
+.info-card {
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.e-grid {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.e-grid .e-headercell {
+  font-weight: 600;
+  position: relative;
+}
+
+.e-grid .e-rowcell,
+.e-grid .e-headercell {
+  font-size: 13px;
+}
+
+.e-grid .e-headercelldiv {
+  display: block;
+  align-items: center;
+  /* Reserve room for both the sort/filter icon (right ~24px) AND the column-menu kebab
+     (right ~4px) when ShowColumnMenu/AllowSorting are on, so header text doesn't wrap or
+     overlap the icons. */
+  max-width: calc(100% - 22px);
+  min-width: 0;
+  gap: 4px;
+  overflow: hidden;
+  padding-right: 44px !important;
+  text-overflow: ellipsis;
+  white-space: nowrap !important;
+}
+
+.e-grid .e-headercell .e-headertext {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  white-space: nowrap !important;
+}
+
+.e-grid .e-sortfilterdiv,
+.e-grid .e-columnmenu {
+  align-items: center;
+  display: inline-flex !important;
+  float: none !important;
+  height: 16px;
+  justify-content: center;
+  margin: 0 !important;
+  position: absolute !important;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+}
+
+.e-grid .e-sortfilterdiv {
+  right: 26px;
+  /* Syncfusion renders the sort/filter glyph on this same div via icon-font classes
+     (e-ascending, e-descending, e-filter, ...) — there are no child elements, so the
+     div looks "empty" but is actually rendering an icon font. Use opacity rather than
+     display:none to hide the placeholder when no glyph is set, so the icon font can
+     still draw when a sort/filter class is applied. */
+  font-size: 12px;
+  color: var(--text-muted);
+  opacity: 0;
+}
+
+/* Whenever Syncfusion adds an icon class to .e-sortfilterdiv, show the glyph. */
+.e-grid .e-sortfilterdiv.e-ascending,
+.e-grid .e-sortfilterdiv.e-descending,
+.e-grid .e-sortfilterdiv.e-filter,
+.e-grid .e-sortfilterdiv[class*="e-filter"],
+.e-grid .e-sortfilterdiv.e-sortnumber,
+.e-grid .e-sortfilterdiv.e-icon-ascending,
+.e-grid .e-sortfilterdiv.e-icon-descending {
+  opacity: 1;
+}
+
+.e-grid .e-columnmenu {
+  right: 6px;
+  cursor: pointer;
+}
+
+.e-grid .e-ascending,
+.e-grid .e-descending,
+.e-grid .e-sortnumber {
+  display: inline-flex !important;
+  float: none !important;
+  line-height: 1 !important;
+  margin: 0 !important;
+  vertical-align: middle;
+}
+
+.status-badge,
+.metric-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 74px;
+  border: 1px solid var(--neutral-border);
+  border-radius: 999px;
+  padding: 3px 10px;
+  background: var(--neutral-bg);
+  color: var(--neutral-text);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.status-active,
+.status-closedwon,
+.metric-strong {
+  background: var(--success-bg);
+  border-color: var(--success-border);
+  color: var(--success-text);
+}
+
+.status-prospect,
+.status-discovery,
+.status-qualification,
+.status-proposal,
+.metric-medium {
+  background: var(--brand-soft);
+  border-color: var(--brand-border);
+  color: var(--brand);
+}
+
+.status-atrisk,
+.status-negotiation,
+.metric-low {
+  background: var(--warning-bg);
+  border-color: var(--warning-border);
+  color: var(--warning-text);
+}
+
+.status-inactive,
+.status-closedlost,
+.metric-risk {
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
+  color: var(--danger-text);
+}
+
+.dashboard-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.dashboard-kpi-card {
+  padding: 16px 18px;
+}
+
+.kpi-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 0.9fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.account-details-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 0.9fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.account-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 20px;
+  margin: 0;
+}
+
+.account-meta dt {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.account-meta dd {
+  margin: 4px 0 0;
+  font-size: 15px;
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.dashboard-chart-card,
+.dashboard-table-card {
+  min-width: 0;
+}
+
+.dashboard-chart-card h2,
+.dashboard-table-card h2 {
+  margin: 0 0 16px;
+  font-size: clamp(16px, 2.2vw, 20px);
+}
+
+.dashboard-table-card .e-grid {
+  max-height: 360px;
+}
+
+/* SfCard (Syncfusion CardComponent) tuning so headings sit flush like the content-card pattern */
+.e-card .e-card-header {
+  padding: 16px 16px 4px;
+}
+
+.e-card .e-card-header h2 {
+  margin: 0;
+  font-size: clamp(16px, 2.2vw, 20px);
+}
+
+.e-card .e-card-content {
+  padding: 12px 16px 16px;
+}
+
+.e-card .kpi-grid {
+  margin: 4px 0 0;
+}
+
+.forecast-summary-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.forecast-summary-item {
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  background: var(--surface-muted);
+  min-width: 0;
+}
+
+.forecast-summary-item span {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.forecast-summary-item strong {
+  font-size: clamp(16px, 2vw, 18px);
+}
+
+/* Syncfusion Card layout for forecast summary tiles. Map the e-card title to the
+   muted metric label and let the e-card-content host the metric value. Keeps the
+   existing forecast-summary-item surface/border while honoring the e-card DOM
+   structure documented at https://ej2.syncfusion.com/react/documentation/card/getting-started. */
+.forecast-summary-item.e-card .e-card-header {
+  padding: 0;
+  margin-bottom: 4px;
+}
+
+.forecast-summary-item.e-card .e-card-title {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.forecast-summary-item.e-card .e-card-content {
+  padding: 0;
+}
+
+.forecast-summary-item.e-card .e-card-content strong {
+  font-size: clamp(16px, 2vw, 18px);
+  font-weight: 700;
+}
+
+.e-chart,
+.e-chart text,
+.e-chart svg text,
+.e-accumulationchart,
+.e-accumulationchart text {
+  font-family: var(--font-family) !important;
+}
+
+.e-chart .e-gridline,
+.e-chart .e-major-grid-line,
+.e-chart path[id*="MajorGridLine"],
+.e-chart path[id*="MajorGridLines"],
+.e-chart path[id*="majorGridLines"] {
+  stroke: var(--chart-grid) !important;
+}
+
+.documents-layout,
+.ai-assistant-layout,
+.territory-layout {
+  display: grid;
+  gap: 20px;
+  align-items: start;
+}
+
+.documents-layout {
+  grid-template-columns: 320px minmax(0, 1fr);
+}
+
+.documents-list h2,
+.ai-risk-list h2 {
+  margin: 0 0 14px;
+  font-size: 18px;
+}
+
+.document-list-item,
+.risk-item {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+  text-align: left;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.document-list-item:hover,
+.document-list-item.active,
+.risk-item:hover {
+  border-color: var(--brand);
+  background: var(--surface-hover);
+}
+
+.document-list-item strong,
+.document-list-item span,
+.risk-item strong,
+.risk-item span,
+.risk-item small {
+  display: block;
+}
+
+.document-list-item span,
+.risk-item span,
+.risk-item small,
+.document-meta p {
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.document-editor-panel {
+  min-width: 0;
+}
+
+.document-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+  margin-bottom: 12px;
+}
+
+.document-meta h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.document-meta span {
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--neutral-text);
+  background: var(--surface-muted);
+}
+
+.territory-layout {
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 320px);
+  align-items: start;
+  min-height: 0;
+}
+
+.territory-map-card {
+  padding: 14px;
+}
+
+.territory-summary {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+.territory-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.territory-card {
+  display: grid;
+  gap: 4px;
+}
+
+.territory-card span,
+.territory-card small {
+  color: var(--text-muted);
+}
+
+.territory-card div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.pipeline-card-template {
+  display: grid;
+  gap: 8px;
+  min-height: 140px;
+  align-content: start;
+  padding: 10px;
+}
+
+.pipeline-card-topline {
+  display: grid;
+  gap: 8px;
+}
+
+.pipeline-card-template strong,
+.pipeline-card-template dt,
+.pipeline-card-template dd {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.pipeline-card-account {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.pipeline-card-template b {
+  color: var(--success-text);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.pipeline-card-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px 10px;
+  margin: 2px 0 0;
+}
+
+.pipeline-card-meta div {
+  min-width: 0;
+}
+
+.pipeline-card-meta-wide {
+  grid-column: 1 / -1;
+}
+
+.pipeline-card-meta dt {
+  margin: 0 0 2px;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.pipeline-card-meta dd {
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.forecast-chip,
+.priority-chip {
+  width: max-content;
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid var(--brand-border);
+  background: var(--brand-soft);
+  color: var(--brand);
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.priority-high {
+  color: var(--danger-text);
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
+}
+
+.priority-medium {
+  color: var(--warning-text);
+  background: var(--warning-bg);
+  border-color: var(--warning-border);
+}
+
+.priority-low {
+  color: var(--success-text);
+  background: var(--success-bg);
+  border-color: var(--success-border);
+}
+
+.ai-assistant-layout {
+  grid-template-columns: 340px minmax(0, 1fr);
+}
+
+.ai-risk-list,
+.ai-assist-panel {
+  min-width: 0;
+}
+
+.e-aiassistview {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+:root[data-theme="dark"] .e-grid,
+:root[data-theme="dark"] .e-grid .e-gridheader,
+:root[data-theme="dark"] .e-grid .e-headercontent,
+:root[data-theme="dark"] .e-grid .e-content,
+:root[data-theme="dark"] .e-grid .e-row,
+:root[data-theme="dark"] .e-grid .e-pager,
+:root[data-theme="dark"] .e-grid .e-filterbar,
+:root[data-theme="dark"] .e-grid .e-filterbarcell,
+:root[data-theme="dark"] .e-grid .e-frozenheader,
+:root[data-theme="dark"] .e-grid .e-frozencontent,
+:root[data-theme="dark"] .e-schedule,
+:root[data-theme="dark"] .e-schedule .e-schedule-toolbar,
+:root[data-theme="dark"] .e-schedule .e-toolbar-items,
+:root[data-theme="dark"] .e-schedule .e-table-wrap,
+:root[data-theme="dark"] .e-schedule .e-month-view,
+:root[data-theme="dark"] .e-kanban,
+:root[data-theme="dark"] .e-kanban .e-kanban-table,
+:root[data-theme="dark"] .e-aiassistview,
+:root[data-theme="dark"] .e-aiassistview .e-view-header,
+:root[data-theme="dark"] .e-aiassistview .e-view-content,
+:root[data-theme="dark"] .e-aiassistview .e-output-container,
+:root[data-theme="dark"] .e-aiassistview .e-content-container {
+  background: var(--surface);
+  color: var(--text);
+}
+
+:root[data-theme="dark"] .e-grid .e-headercell,
+:root[data-theme="dark"] .e-grid .e-rowcell,
+:root[data-theme="dark"] .e-grid .e-pager,
+:root[data-theme="dark"] .e-grid .e-filterbarcell,
+:root[data-theme="dark"] .e-schedule .e-header-cells,
+:root[data-theme="dark"] .e-schedule .e-work-cells,
+:root[data-theme="dark"] .e-schedule .e-date-header-wrap,
+:root[data-theme="dark"] .e-schedule .e-content-wrap,
+:root[data-theme="dark"] .e-schedule .e-month-view .e-date-header,
+:root[data-theme="dark"] .e-kanban .e-header-cells,
+:root[data-theme="dark"] .e-kanban .e-card {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+:root[data-theme="dark"] .e-grid .e-altrow,
+:root[data-theme="dark"] .e-grid .e-filterbarcell input,
+:root[data-theme="dark"] .e-grid .e-input-group,
+:root[data-theme="dark"] .e-grid .e-control.e-textbox,
+:root[data-theme="dark"] .e-pager .e-pagercontainer,
+:root[data-theme="dark"] .e-pager .e-numericitem,
+:root[data-theme="dark"] .e-pager .e-prevpagedisabled,
+:root[data-theme="dark"] .e-pager .e-nextpagedisabled,
+:root[data-theme="dark"] .e-pager .e-prevpage,
+:root[data-theme="dark"] .e-pager .e-nextpage,
+:root[data-theme="dark"] .e-kanban .e-content-row .e-content-cells {
+  background: var(--surface-muted);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+:root[data-theme="dark"] .e-chart,
+:root[data-theme="dark"] .e-maps {
+  background: var(--surface);
+}
+
+:root[data-theme="dark"] .e-chart text,
+:root[data-theme="dark"] .e-chart svg text,
+:root[data-theme="dark"] .e-accumulationchart text {
+  fill: var(--text) !important;
+  color: var(--text) !important;
+}
+
+:root[data-theme="dark"] .e-chart .e-axis-label,
+:root[data-theme="dark"] .e-chart .e-chart-title,
+:root[data-theme="dark"] .e-chart .e-chart-subtitle,
+:root[data-theme="dark"] .e-chart .e-legendtext {
+  fill: var(--text) !important;
+}
+
+:root[data-theme="dark"] .e-grid .e-filterbarcell input::placeholder,
+:root[data-theme="dark"] .e-input::placeholder {
+  color: var(--text-muted);
+}
+
+:root[data-theme="dark"] .e-pager .e-currentitem {
+  background: var(--brand);
+  color: #0f172a;
+}
+
+:root[data-theme="dark"] .e-toolbar,
+:root[data-theme="dark"] .e-toolbar .e-toolbar-items,
+:root[data-theme="dark"] .e-toolbar .e-tbar-btn,
+:root[data-theme="dark"] .e-toolbar .e-tbar-btn-text,
+:root[data-theme="dark"] .e-toolbar .e-icons {
+  background: var(--surface);
+  color: var(--text);
+}
+
+:root[data-theme="dark"] .e-toolbar .e-tbar-btn:hover,
+:root[data-theme="dark"] .e-toolbar .e-tbar-btn:focus,
+:root[data-theme="dark"] .e-toolbar .e-active-view .e-tbar-btn {
+  background: var(--surface-hover);
+  color: var(--brand);
+}
+
+:root[data-theme="dark"] .e-aiassistview .e-view-header,
+:root[data-theme="dark"] .e-aiassistview .e-toolbar,
+:root[data-theme="dark"] .e-aiassistview .e-footer,
+:root[data-theme="dark"] .e-aiassistview .e-prompt-container,
+:root[data-theme="dark"] .e-aiassistview .e-output,
+:root[data-theme="dark"] .e-aiassistview .e-output-content,
+:root[data-theme="dark"] .e-aiassistview .e-response,
+:root[data-theme="dark"] .e-aiassistview .e-response-item,
+:root[data-theme="dark"] .e-aiassistview .e-suggestions,
+:root[data-theme="dark"] .e-aiassistview .e-suggestion-list {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+
+:root[data-theme="dark"] .e-aiassistview .e-prompt-text,
+:root[data-theme="dark"] .e-aiassistview .e-output,
+:root[data-theme="dark"] .e-aiassistview .e-output *,
+:root[data-theme="dark"] .e-aiassistview .e-response *,
+:root[data-theme="dark"] .e-aiassistview .e-suggestions *,
+:root[data-theme="dark"] .e-aiassistview .e-view-header * {
+  color: var(--text) !important;
+}
+
+:root[data-theme="dark"] .e-aiassistview .e-prompt,
+:root[data-theme="dark"] .e-aiassistview .e-prompt-content {
+  background: var(--surface-muted) !important;
+  color: var(--text) !important;
+}
+
+/* =====================================================================
+   RESPONSIVE LAYOUT (Tailwind 4 utilities + Syncfusion component overrides)
+   Breakpoints: sm=640, md=768, lg=1024, xl=1280, 2xl=1536
+   Tested viewports: 2560x1440, 1920x1080, 1440x900, 1366x768, 1280x720,
+                     1024x768, 768x1024, 414x896, 390x844, 360x800, 320x568
+   ===================================================================== */
+
+/* ===== Large desktops (>=1280px): comfortable spacing ===== */
+@media (min-width: 1280px) {
+  .main-content {
+    padding: 24px 32px 48px;
+  }
+
+  .topbar {
+    padding: 14px 32px;
+  }
+}
+
+/* ===== Tablet landscape / small laptop (<=1024px) ===== */
+@media (max-width: 1024px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-grid,
+  .account-details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .forecast-summary-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .territory-layout,
+  .ai-assistant-layout,
+  .documents-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .account-meta {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== Tablet portrait (<=768px): collapse sidebar to off-canvas drawer,
+       show hamburger toggle button, enable overlay backdrop. ===== */
+@media (max-width: 768px) {
+  .sidebar-toggle {
+    display: inline-flex;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 50;
+    width: 260px;
+    max-width: 80vw;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    box-shadow: 2px 0 14px rgba(0, 0, 0, 0.25);
+    overflow-y: auto;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: rgba(0, 0, 0, 0.45);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .sidebar-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .app-shell {
+    flex-direction: column;
+  }
+
+  .main-content {
+    height: auto;
+    min-height: 100vh;
+    padding: 16px 14px 36px;
+  }
+
+  body {
+    overflow: auto;
+  }
+
+  .topbar {
+    padding: 10px 14px;
+    gap: 8px;
+  }
+
+  .topbar-left strong {
+    font-size: clamp(13px, 3.5vw, 16px);
+  }
+
+  .theme-toggle {
+    padding: 6px 10px;
+  }
+
+  .theme-toggle span {
+    display: none;
+  }
+
+  .kpi-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .forecast-summary-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .content-card {
+    padding: 14px;
+  }
+
+  .metric-card {
+    padding: 12px 14px;
+  }
+
+  /* Syncfusion grids/schedules/kanbans overflow horizontally on small screens */
+  .e-grid,
+  .e-schedule,
+  .e-kanban,
+  .e-maps,
+  .e-aiassistview {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .e-grid .e-gridcontent,
+  .e-schedule .e-table-wrap {
+    overflow-x: auto;
+  }
+
+  .e-kanban .e-kanban-table {
+    min-width: 720px;
+  }
+}
+
+/* ===== Mobile (<=640px) ===== */
+@media (max-width: 640px) {
+  .main-content {
+    padding: 12px 10px 32px;
+  }
+
+  .topbar {
+    padding: 8px 12px;
+  }
+
+  .content-card {
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .dashboard-grid {
+    gap: 12px;
+  }
+
+  .kpi-grid {
+    gap: 10px;
+  }
+
+  .forecast-summary-strip {
+    gap: 10px;
+  }
+
+  .documents-layout,
+  .ai-assistant-layout,
+  .territory-layout {
+    gap: 12px;
+  }
+
+  .e-kanban .e-kanban-table {
+    min-width: 600px;
+  }
+
+  .pipeline-card-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .document-meta {
+    flex-direction: column;
+    gap: 6px;
+  }
+}
+
+/* ===== Very small phones (<=480px) ===== */
+@media (max-width: 480px) {
+  .topbar-left strong {
+    font-size: 13px;
+  }
+
+  .page-header h1 {
+    font-size: 18px;
+  }
+
+  .page-header p {
+    font-size: 12px;
+  }
+
+  .metric-value {
+    font-size: 18px;
+  }
+
+  .metric-card-icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  .e-kanban .e-kanban-table {
+    min-width: 500px;
+  }
+}
+
+/* ===== Tiny phones (<=360px) ===== */
+@media (max-width: 360px) {
+  .topbar {
+    padding: 6px 8px;
+  }
+
+  .main-content {
+    padding: 10px 6px 28px;
+  }
+
+  .content-card {
+    padding: 10px;
+  }
+
+  .e-kanban .e-kanban-table {
+    min-width: 440px;
+  }
+}
+
+/* ===== Syncfusion component responsive overrides (all breakpoints) ===== */
+.e-grid,
+.e-schedule,
+.e-kanban,
+.e-maps,
+.e-aiassistview,
+.e-documenteditor {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.e-grid .e-gridcontent,
+.e-schedule .e-table-wrap,
+.e-kanban .e-kanban-table {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+  .document-editor-panel .e-documenteditor-container,
+  .document-editor-panel .e-documenteditor {
+    height: 420px !important;
+  }
+}
+
+/* =====================================================================
+   LARGE / 4K DISPLAY SUPPORT (>=1920px)
+   Adds readable content caps, larger typography, taller Syncfusion
+   components, and more generous spacing so pages do not look stretched
+   or sparse on QHD / 4K monitors. Existing <=1024 / <=768 / <=640
+   rules are untouched, so tablet/mobile behavior is unchanged.
+   ===================================================================== */
+
+/* ===== QHD / 4K @ 200% scaling (>=1920px) ===== */
+@media (min-width: 1920px) {
+  .topbar {
+    padding: 16px 40px;
+  }
+
+  .sidebar {
+    width: 240px;
+  }
+
+  .main-content {
+    padding: 28px 40px 56px;
+  }
+
+  body {
+    font-size: 17px;
+  }
+
+  .sidebar a {
+    font-size: 15px;
+  }
+
+  .e-grid .e-rowcell,
+  .e-grid .e-headercell {
+    font-size: 14px;
+  }
+
+  .metric-label {
+    font-size: 14px;
+  }
+
+  .kpi-grid,
+  .forecast-summary-strip {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+
+  .page-header h1 {
+    font-size: clamp(22px, 3vw, 32px);
+  }
+
+  .metric-value {
+    font-size: clamp(22px, 2.6vw, 28px);
+  }
+
+  .content-card h2 {
+    font-size: clamp(18px, 2.2vw, 24px);
+  }
+
+  .dashboard-chart-card .e-chart,
+  .territory-map-card .e-maps,
+  .forecast-chart-card .e-chart {
+    height: 380px !important;
+  }
+
+  .dashboard-table-card .e-grid {
+    height: 400px !important;
+  }
+}
+
+/* ===== 4K @ 150% scaling / ultrawide 1440p (>=2560px) =====
+   Centers content with a fixed max-width so line lengths stay readable
+   and cards do not sprawl edge-to-edge on very wide viewports. */
+@media (min-width: 2560px) {
+  .topbar {
+    padding: 18px 56px;
+  }
+
+  .sidebar {
+    width: 260px;
+  }
+
+  .main-content {
+    max-width: 2200px;
+    margin-inline: auto;
+    padding: 36px 56px 72px;
+  }
+
+  body {
+    font-size: 18px;
+  }
+
+  .sidebar a {
+    font-size: 16px;
+  }
+
+  .e-grid .e-rowcell,
+  .e-grid .e-headercell {
+    font-size: 15px;
+  }
+
+  .metric-label {
+    font-size: 15px;
+  }
+
+  .kpi-grid,
+  .forecast-summary-strip {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+
+  .page-header h1 {
+    font-size: clamp(26px, 3vw, 36px);
+  }
+
+  .page-header p {
+    font-size: 16px;
+  }
+
+  .metric-value {
+    font-size: clamp(24px, 2.6vw, 32px);
+  }
+
+  .content-card h2 {
+    font-size: clamp(20px, 2.2vw, 26px);
+  }
+
+  .dashboard-chart-card .e-chart,
+  .territory-map-card .e-maps,
+  .forecast-chart-card .e-chart {
+    height: 420px !important;
+  }
+
+  .dashboard-table-card .e-grid {
+    height: 440px !important;
+  }
+}
+
+/* ===== Native 4K / super-ultrawide (>=3440px) ===== */
+@media (min-width: 3440px) {
+  .topbar {
+    padding: 18px 72px;
+  }
+
+  .main-content {
+    max-width: 2800px;
+    padding: 44px 72px 88px;
+  }
+
+  .page-header h1 {
+    font-size: clamp(30px, 3vw, 40px);
+  }
+
+  .metric-value {
+    font-size: clamp(28px, 2.6vw, 36px);
+  }
+
+  .content-card h2 {
+    font-size: clamp(22px, 2.2vw, 28px);
+  }
+
+  .dashboard-chart-card .e-chart,
+  .territory-map-card .e-maps,
+  .forecast-chart-card .e-chart {
+    height: 480px !important;
+  }
+
+  .dashboard-table-card .e-grid {
+    height: 520px !important;
+  }
+}

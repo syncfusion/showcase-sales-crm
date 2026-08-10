@@ -1,0 +1,34 @@
+﻿<nav class="@($"sidebar {(Class is { Length: > 0 } ? Class : "")}")">
+    <div class="sidebar-title">Sales CRM</div>
+    @foreach (var item in NavItems)
+    {
+        <div class="sidebar-item">
+            <NavLink href="@item.Href" Match="@(item.Href == "/" ? NavLinkMatch.All : NavLinkMatch.Prefix)" class="nav-link">
+                <span class="sidebar-icon"><AppIcon Name="@item.Icon" Size="18" /></span>
+                <span>@item.Label</span>
+            </NavLink>
+        </div>
+    }
+</nav>
+
+@code {
+    [Parameter] public string? Class { get; set; }
+
+    private static readonly NavEntry[] NavItems =
+    [
+        new("Dashboard", "/", "dashboard"),
+        new("Accounts", "accounts", "accounts"),
+        new("Contacts", "contacts", "contacts"),
+        new("Opportunities", "opportunities", "opportunities"),
+        new("Pipeline Kanban", "pipeline", "pipeline"),
+        new("Forecast", "forecast", "forecast"),
+        new("Activities Calendar", "activities", "activities"),
+        new("Territory Map", "territories", "territories"),
+        new("Documents", "documents", "documents"),
+        new("AI Sales Assistant", "assistant", "assistant"),
+        new("Admin Seed Data", "admin", "admin")
+    ];
+
+    private sealed record NavEntry(string Label, string Href, string Icon);
+}
+

@@ -1,0 +1,61 @@
+@page "/admin"
+@inject ISalesCrmApiClient ApiClient
+
+<PageHeader Title="Admin Seed Data"
+           Subtitle="Inspect and refresh deterministic demo data."
+           Icon="admin" />
+
+<div class="content-card admin-card">
+    @if (refreshing)
+    {
+        <LoadingState />
+    }
+    else if (!string.IsNullOrEmpty(error))
+    {
+        <ErrorState Message="@error" />
+    }
+    else if (!string.IsNullOrEmpty(status))
+    {
+        <p><strong>Seed refresh status:</strong> @status</p>
+    }
+    else
+    {
+        <EmptyState Message="Click the button below to refresh deterministic demo data." />
+    }
+
+    <div class="admin-actions">
+        <SfButton IsPrimary="true" @onclick="RefreshAsync" Disabled="@refreshing">
+            <span class="admin-button-content">
+                <AppIcon Name="refresh" Size="16" />
+                <span>Refresh Seed Data</span>
+            </span>
+        </SfButton>
+    </div>
+</div>
+
+@code {
+    private string? status;
+    private string? error;
+    private bool refreshing;
+
+    private async Task RefreshAsync()
+    {
+        refreshing = true;
+        error = null;
+        status = null;
+        try
+        {
+            //TODO:code101 - unblock the follwing to use the database sync
+            var response = await ApiClient.RefreshSeedDataAsync();
+            status = response.Status;
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            refreshing = false;
+        }
+    }
+}

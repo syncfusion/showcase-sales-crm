@@ -1,0 +1,7 @@
+@* Numeric health score badge. *@
+<span class="metric-badge @Badges.ToneClassForScore(Value)">
+    @Value
+</span>
+@code {
+    [Parameter] public int Value { get; set; }
+}

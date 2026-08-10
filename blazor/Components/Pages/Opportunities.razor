@@ -1,0 +1,104 @@
+@page "/opportunities"
+@inject ISalesCrmApiClient ApiClient
+
+<PageHeader Title="Opportunities"
+           Subtitle="Manage deal stages, values, and next actions."
+           Icon="opportunities" />
+
+@if (loading)
+{
+    <LoadingState />
+}
+else if (!string.IsNullOrEmpty(error))
+{
+    <ErrorState Message="@error" />
+}
+else if (opportunities.Count == 0)
+{
+    <EmptyState Message="No opportunities found." />
+}
+else
+{
+    <div class="content-card">
+        <div class="w-full overflow-x-auto">
+        <SfGrid @ref="gridRef"
+                DataSource="@opportunities"
+                AllowPaging="true"
+                AllowSorting="true"
+                AllowFiltering="true"
+                AllowGrouping="true"
+                AllowTextWrap="true"
+                AllowResizing="true"
+                AllowExcelExport="true"
+                AllowCsvExport="true"
+                ShowColumnMenu="true"
+                Toolbar="@ToolbarItems"
+                Height="560px">
+            <GridPageSettings PageSize="10" PageCount="5" />
+            <GridFilterSettings Type="Syncfusion.Blazor.Grids.FilterType.Menu" />
+            <GridTextWrapSettings WrapMode="Syncfusion.Blazor.Grids.WrapMode.Both" />
+            <GridGroupSettings ShowDropArea="true" ShowUngroupButton="true" />
+            <GridEvents TValue="OpportunityDto" OnToolbarClick="OnToolbarClicking" />
+            <GridColumns>
+                <GridColumn Field="OpportunityName" HeaderText="Opportunity Name" Width="230" />
+                <GridColumn Field="Account" HeaderText="Account" Width="180" />
+                <GridColumn Field="Stage" HeaderText="Stage" Width="140" TextAlign="Syncfusion.Blazor.Grids.TextAlign.Center">
+                    <Template>
+                        <StatusBadge Value="@Formatters.StageLabel((context as OpportunityDto)?.Stage ?? string.Empty)" />
+                    </Template>
+                </GridColumn>
+                <GridColumn Field="Amount" HeaderText="Amount" Width="150" TextAlign="Syncfusion.Blazor.Grids.TextAlign.Right" Format="C2" />
+                <GridColumn Field="Probability" HeaderText="Probability" Width="130" TextAlign="Syncfusion.Blazor.Grids.TextAlign.Right">
+                    <Template>
+                        <ProbabilityBadge Value="@((context as OpportunityDto)?.Probability ?? 0)" />
+                    </Template>
+                </GridColumn>
+                <GridColumn Field="ExpectedCloseDate" HeaderText="Expected Close Date" Width="160" Format="MMM dd, yyyy" Type="Syncfusion.Blazor.Grids.ColumnType.Date" />
+                <GridColumn Field="Owner" HeaderText="Owner" Width="170" />
+            </GridColumns>
+        </SfGrid>
+        </div>
+    </div>
+}
+
+@code {
+    private SfGrid<OpportunityDto>? gridRef;
+    private List<OpportunityDto> opportunities = new();
+    private bool loading = true;
+    private string? error;
+
+    private static readonly List<string> ToolbarItems = new() { "ExcelExport", "CsvExport", "ColumnChooser", "Search" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            opportunities = (await ApiClient.GetOpportunitiesAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task OnToolbarClicking(Syncfusion.Blazor.Navigations.ClickEventArgs args)
+    {
+        if (gridRef is null) return;
+
+        var id = args.Item.Id ?? string.Empty;
+        if (id.Contains("excelexport", StringComparison.OrdinalIgnoreCase))
+        {
+            args.Cancel = true;
+            await gridRef.ExportToExcelAsync();
+        }
+        else if (id.Contains("csvexport", StringComparison.OrdinalIgnoreCase))
+        {
+            args.Cancel = true;
+            await gridRef.ExportToCsvAsync();
+        }
+    }
+}

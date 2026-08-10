@@ -1,0 +1,7 @@
+@* Status badge for stage/status strings. *@
+<span class="status-badge @Badges.NormalizeStatusClass(Value)">
+    @Value
+</span>
+@code {
+    [Parameter] public string? Value { get; set; }
+}
