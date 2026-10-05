@@ -16,7 +16,7 @@
     "@angular/core": "^21.2.0",
     "@angular/forms": "^21.2.0",
     "@angular/platform-browser": "^21.2.0",
-    "@angular/router": "^21.2.0",
+    "@angular/router": "^21.2.24",
     "@lucide/angular": "^1.22.0",
     "@syncfusion/ej2-angular-buttons": "^34.2.2",
     "@syncfusion/ej2-angular-charts": "^34.2.2",
